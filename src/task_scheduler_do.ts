@@ -119,6 +119,10 @@ export class TaskScheduler {
           const latest = events.length ? events[events.length - 1].occurredAt : null;
           return json({ events, latest });
         }
+        if (request.method === "DELETE") {
+          await this.state.storage.delete("__events");
+          return json({ ok: true, cleared: true });
+        }
         return json({ error: "Method not allowed" }, 405);
       }
       // List only tasks that are currently due (nextRun <= now & enabled)
