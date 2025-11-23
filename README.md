@@ -31,14 +31,18 @@ npm run dev
 
 ## Using Chat + Scheduling
 
-- Start a conversation as usual; the frontend keeps the last few turns so `/api/chat` stays lean.
-- Open the **Schedule** drawer to create a reminder. You can type natural language (“remind me tomorrow at 9am”), pick an ISO datetime, or specify a delay in seconds.
-- When you enter natural language, click **Parse** to lock in the time, review the converted datetime, and then click **Create Task** to save it.
-- The client normalizes natural phrases locally, then calls `/api/parse-time` if needed. Ambiguous phrases surface a gentle prompt so you can clarify before anything is saved.
-- Confirming a task posts it to `/api/tasks`, where the Durable Object stores it, schedules the next run, and logs the event for the activity feed.
-- When an alarm fires, the Durable Object records a `fired` event and reschedules recurring entries using a simple `*/N * * * *` cadence.
+**To chat, do this…**
+- Start typing in the main composer and press Enter (or click **Send**) to stream a reply from `/api/chat`.
+- Keep the conversation going with follow-up prompts; the client trims older turns so each request stays lean.
+- Watch the response stream in real time, and use the task bar’s activity feed to keep context while you continue chatting.
 
-The task bar along the right keeps everything in view: latest reminders, status updates (including parsing errors), and quick actions for re-running or inspecting entries—no need to leave the current conversation.
+**To schedule, do this…**
+- Click **Schedule** to open the drawer and choose your timing mode (natural phrase, exact datetime, or delay in seconds).
+- If you enter natural language, hit **Parse** to convert it; confirm the previewed datetime looks right, then click **Create Task**.
+- The client validates the payload, calls `/api/parse-time` when needed, and posts to `/api/tasks` once everything checks out.
+- Scheduled items populate the task bar with status updates; when an alarm fires the Durable Object records a `fired` event and reschedules recurring jobs using the `*/N * * * *` pattern.
+
+The task bar along the right keeps everything in view: latest reminders, parse status (including any ambiguity warnings), and quick actions for re-running or inspecting entries—no need to leave the current conversation.
 
 Power users can hit auxiliary endpoints directly:
 
