@@ -54,4 +54,4 @@ Power users can hit auxiliary endpoints directly:
 
 ## Acknowledgements
 
-Huge thanks to Cloudflare for the [LLM Chat Application Template](https://github.com/cloudflare/templates/tree/main/llm-chat-app-template). This project keeps their deployment ergonomics and design, layering on reminder scheduling so you can chat, plan, and follow through without leaving the page.
+Huge thanks to Cloudflare for the [LLM Chat Application Template](https://github.com/cloudflare/templates/tree/main/llm-chat-app-template). This project keeps their deployment ergonomics, but improves the UI and layers on reminder scheduling so you can chat, plan, and follow through without leaving the page.
