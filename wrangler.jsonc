@@ -6,7 +6,11 @@
   "name": "cf-ai-app",
   "main": "src/index.ts",
   "compatibility_date": "2025-10-08",
-  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public",
+    "durable_object_alarms"
+  ],
   "assets": {
     "binding": "ASSETS",
     "directory": "./public"
@@ -17,5 +21,21 @@
   "ai": {
     "binding": "AI"
   },
-  "upload_source_maps": true
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": [
+        "TaskScheduler"
+      ]
+    }
+  ],
+  "upload_source_maps": true,
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "TASK_SCHEDULER",
+        "class_name": "TaskScheduler"
+      }
+    ]
+  }
 }

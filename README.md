@@ -1,153 +1,56 @@
-# LLM Chat Application Template
+# cf_ai_app
 
-A simple, ready-to-deploy chat application template powered by Cloudflare Workers AI. This template provides a clean starting point for building AI chat applications with streaming responses.
+A conversational assistant that can also schedule reminders, built on top of Cloudflare's LLM chat template. The chat side streams responses from Workers AI, while the scheduler stores tasks in a Durable Object so you can plan follow-ups right from the same UI.
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/llm-chat-app-template)
+## Highlights
 
-<!-- dash-content-start -->
+- **Chat-first experience** with streaming replies from `@cf/meta/llama-3.3-70b-instruct-fp8-fast` and a concise system prompt.
+- **Task scheduling toolkit** that parses natural-language timing, converts it to concrete datetimes, and hands it to a Durable Object for reliable alarms.
+- **Shared activity feed** that shows what was scheduled, when it fires, and any follow-up runs for recurring tasks.
+- **All Workers-native**: static assets served from Workers Sites, API logic in TypeScript, state handled through Durable Objects.
 
-## Demo
+## How it Works
 
-This template demonstrates how to build an AI-powered chat interface using Cloudflare Workers AI with streaming responses. It features:
+- `src/index.ts` keeps the original Cloudflare template structure for `/api/chat`, then adds `/api/parse-time` for deterministic timestamp parsing and proxies `/api/tasks/*` into the `TaskScheduler` Durable Object.
+- `src/task_scheduler_do.ts` persists tasks, enforces timing validation, schedules alarms (with dev fallbacks), and records a capped event history so the UI always knows what happened.
+- `public/chat.js` extends the starter client with a scheduling panel: it suggests task titles, parses free-form time using deterministic rules plus the `/api/parse-time` endpoint, and posts tasks to the Durable Object.
+- `public/index.html` keeps the polished template styling while adding panels for reminders, recent activity, and status messaging.
 
-- Real-time streaming of AI responses using Server-Sent Events (SSE)
-- Easy customization of models and system prompts
-- Support for AI Gateway integration
-- Clean, responsive UI that works on mobile and desktop
+Because this project started from Cloudflare's Workers AI chat template, the overall structure and deployment flow remain the same—you just get chat and scheduling in one place.
 
-## Features
+## Running the App
 
-- 💬 Simple and responsive chat interface
-- ⚡ Server-Sent Events (SSE) for streaming responses
-- 🧠 Powered by Cloudflare Workers AI LLMs
-- 🛠️ Built with TypeScript and Cloudflare Workers
-- 📱 Mobile-friendly design
-- 🔄 Maintains chat history on the client
-- 🔎 Built-in Observability logging
-<!-- dash-content-end -->
-
-## Getting Started
-
-### Prerequisites
-
-- [Node.js](https://nodejs.org/) (v18 or newer)
-- [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/)
-- A Cloudflare account with Workers AI access
-
-### Installation
-
-1. Clone this repository:
-
-   ```bash
-   git clone https://github.com/cloudflare/templates.git
-   cd templates/llm-chat-app
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-3. Generate Worker type definitions:
-   ```bash
-   npm run cf-typegen
-   ```
-
-### Development
-
-Start a local development server:
+You'll need Node.js 18+, Wrangler, and Workers AI access on your Cloudflare account.
 
 ```bash
+npm install
+npm run cf-typegen
 npm run dev
 ```
 
-This will start a local server at http://localhost:8787.
+- Visit `http://localhost:8787` to chat with the assistant and create reminders.
+- `npm run deploy` pushes the Worker to Cloudflare when you're ready.
 
-Note: Using Workers AI accesses your Cloudflare account even during local development, which will incur usage charges.
+## Using Chat + Scheduling
 
-### Deployment
+- Start a conversation as usual; the frontend keeps the last few turns so `/api/chat` stays lean.
+- Open the **Schedule** drawer to create a reminder. You can type natural language (“remind me tomorrow at 9am”), pick an ISO datetime, or specify a delay in seconds.
+- The client normalizes natural phrases locally, then calls `/api/parse-time` if needed. Ambiguous phrases surface a gentle prompt so you can clarify before anything is saved.
+- Confirming a task posts it to `/api/tasks`, where the Durable Object stores it, schedules the next run, and logs the event for the activity feed.
+- When an alarm fires, the Durable Object records a `fired` event and reschedules recurring entries using a simple `*/N * * * *` cadence.
 
-Deploy to Cloudflare Workers:
+Power users can hit auxiliary endpoints directly:
 
-```bash
-npm run deploy
-```
+- `GET /api/tasks` lists stored tasks.
+- `GET /api/tasks/due` shows tasks ready to run (useful in dev when alarms fall back to timers).
+- `POST /api/tasks/run-due` forces the Durable Object to process due tasks immediately.
+- `POST /api/parse-time` converts natural text to JSON `{ iso, durationSeconds, ambiguous }` without opening the UI.
 
-### Monitor
+## Testing and Tooling
 
-View real-time logs associated with any deployed Worker:
+- `npm test` runs the Vitest suite configured for Workers.
+- `npm run check` type-checks and performs a dry-run deploy to catch configuration issues early.
 
-```bash
-npm wrangler tail
-```
+## Acknowledgements
 
-## Project Structure
-
-```
-/
-├── public/             # Static assets
-│   ├── index.html      # Chat UI HTML
-│   └── chat.js         # Chat UI frontend script
-├── src/
-│   ├── index.ts        # Main Worker entry point
-│   └── types.ts        # TypeScript type definitions
-├── test/               # Test files
-├── wrangler.jsonc      # Cloudflare Worker configuration
-├── tsconfig.json       # TypeScript configuration
-└── README.md           # This documentation
-```
-
-## How It Works
-
-### Backend
-
-The backend is built with Cloudflare Workers and uses the Workers AI platform to generate responses. The main components are:
-
-1. **API Endpoint** (`/api/chat`): Accepts POST requests with chat messages and streams responses
-2. **Streaming**: Uses Server-Sent Events (SSE) for real-time streaming of AI responses
-3. **Workers AI Binding**: Connects to Cloudflare's AI service via the Workers AI binding
-
-### Frontend
-
-The frontend is a simple HTML/CSS/JavaScript application that:
-
-1. Presents a chat interface
-2. Sends user messages to the API
-3. Processes streaming responses in real-time
-4. Maintains chat history on the client side
-
-## Customization
-
-### Changing the Model
-
-To use a different AI model, update the `MODEL_ID` constant in `src/index.ts`. You can find available models in the [Cloudflare Workers AI documentation](https://developers.cloudflare.com/workers-ai/models/).
-
-### Using AI Gateway
-
-The template includes commented code for AI Gateway integration, which provides additional capabilities like rate limiting, caching, and analytics.
-
-To enable AI Gateway:
-
-1. [Create an AI Gateway](https://dash.cloudflare.com/?to=/:account/ai/ai-gateway) in your Cloudflare dashboard
-2. Uncomment the gateway configuration in `src/index.ts`
-3. Replace `YOUR_GATEWAY_ID` with your actual AI Gateway ID
-4. Configure other gateway options as needed:
-   - `skipCache`: Set to `true` to bypass gateway caching
-   - `cacheTtl`: Set the cache time-to-live in seconds
-
-Learn more about [AI Gateway](https://developers.cloudflare.com/ai-gateway/).
-
-### Modifying the System Prompt
-
-The default system prompt can be changed by updating the `SYSTEM_PROMPT` constant in `src/index.ts`.
-
-### Styling
-
-The UI styling is contained in the `<style>` section of `public/index.html`. You can modify the CSS variables at the top to quickly change the color scheme.
-
-## Resources
-
-- [Cloudflare Workers Documentation](https://developers.cloudflare.com/workers/)
-- [Cloudflare Workers AI Documentation](https://developers.cloudflare.com/workers-ai/)
-- [Workers AI Models](https://developers.cloudflare.com/workers-ai/models/)
+Huge thanks to Cloudflare for the [LLM Chat Application Template](https://github.com/cloudflare/templates/tree/main/llm-chat-app-template). This project keeps their deployment ergonomics and design, layering on reminder scheduling so you can chat, plan, and follow through without leaving the page.
