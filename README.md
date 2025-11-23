@@ -37,6 +37,7 @@ npm run dev
 
 - Visit `http://localhost:8787` to chat with the assistant and create reminders.
 - `npm run deploy` pushes the Worker to Cloudflare when you're ready.
+- You can try the live deployment at <https://cf-ai-app.leokeran.workers.dev/> any time.
 
 ## Using Chat + Scheduling
 
