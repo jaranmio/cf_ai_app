@@ -27,6 +27,8 @@ A conversational assistant that can also schedule reminders, built on top of Clo
 
 ## Running the App
 
+> **Live demo:** You can try the deployed assistant at <https://cf-ai-app.leokeran.workers.dev/> any time.
+
 You'll need Node.js 18+, Wrangler, and Workers AI access on your Cloudflare account.
 
 ```bash
@@ -37,7 +39,6 @@ npm run dev
 
 - Visit `http://localhost:8787` to chat with the assistant and create reminders.
 - `npm run deploy` pushes the Worker to Cloudflare when you're ready.
-- You can try the live deployment at <https://cf-ai-app.leokeran.workers.dev/> any time.
 
 ## Using Chat + Scheduling
 
